@@ -95,7 +95,18 @@ function main () {
   echo
 
   # Issue #111 - https://github.com/huan/docker-wechat/issues/111
-  rm -f "$HOME/DoChat/Applcation Data/Tencent/WeChat/All Users/config/configEx.ini"
+  if [ "$is_init" == 1 ]
+  then
+    sudo /bin/rm -rf "$HOME/DoChat/"
+    set +e
+    docker stop DoChat
+    docker rm DoChat
+    set -e
+  else
+    # sudo /bin/rm -f "$HOME/DoChat/Applcation Data/Tencent/WeChat/All Users/config/configEx.ini"
+    docker start DoChat
+    return
+  fi
 
   #
   # --privileged: enable sound (/dev/snd/)
@@ -104,11 +115,11 @@ function main () {
   docker run \
     "${DEVICE_ARG[@]}" \
     --name DoChat \
-    --rm \
+    -d \
     -i \
     \
-    -v "$HOME/DoChat/WeChat Files/":'/home/user/WeChat Files/' \
-    -v "$HOME/DoChat/Applcation Data":'/home/user/.wine/drive_c/users/user/Application Data/' \
+    -v "$HOME/DoChat/WeChat Files/":"/home/$USER/WeChat Files/" \
+    -v "$HOME/DoChat/Applcation Data":"/home/$USER/.wine/drive_c/users/user/Application Data/" \
     -v /tmp/.X11-unix:/tmp/.X11-unix \
     \
     -e DISPLAY \
@@ -141,6 +152,16 @@ function main () {
     echo '🐞 Bug Report: https://github.com/huan/docker-wechat/issues'
     echo
 
+  sudo chmod 777 "$HOME/DoChat/WeChat Files/"
+  sudo chmod 777 "$HOME/DoChat/Applcation Data"
 }
+
+is_init=0
+if [ "$1" == "init" ]
+then
+	is_init=1
+else
+	DOCHAT_SKIP_PULL=1
+fi
 
 main
